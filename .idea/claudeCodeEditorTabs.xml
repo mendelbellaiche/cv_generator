@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ClaudeCodeEditorTabs">
-    <option name="activeSessionId" value="40d6bbdf-183a-4ceb-89f3-3247209d6619" />
+    <option name="activeSessionId" value="3f72d5af-1c4a-478c-ae52-53c76caa03a3" />
     <option name="openSessionIds">
       <list>
         <option value="58fef29a-6ca0-4646-8662-82f9dac8a589" />
         <option value="40d6bbdf-183a-4ceb-89f3-3247209d6619" />
+        <option value="3f72d5af-1c4a-478c-ae52-53c76caa03a3" />
       </list>
     </option>
     <option name="sessionPaths">
       <map>
+        <entry key="3f72d5af-1c4a-478c-ae52-53c76caa03a3" value="/sessions/new" />
         <entry key="40d6bbdf-183a-4ceb-89f3-3247209d6619" value="/sessions/ac48e3bb-7485-4abc-9d19-b806a7dfff43" />
         <entry key="58fef29a-6ca0-4646-8662-82f9dac8a589" value="/sessions/619f0464-65ef-4be7-b57e-c1b3a95e1962" />
       </map>
     </option>
     <option name="sessionTitles">
       <map>
+        <entry key="3f72d5af-1c4a-478c-ae52-53c76caa03a3" value="Claude Code" />
         <entry key="40d6bbdf-183a-4ceb-89f3-3247209d6619" value="creer un dossier public (pour le /var/www/public/" />
         <entry key="58fef29a-6ca0-4646-8662-82f9dac8a589" value="ajout moi le code si l'user est connecté et me red" />
       </map>

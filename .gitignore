@@ -1,3 +1,4 @@
 /vendor/
 admin/.env
 moncv.sqlite
+.env

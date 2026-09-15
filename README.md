@@ -44,7 +44,7 @@ Tu devrais voir pdo_sqlite et sqlite3 apparaître.
 
 ## Migrations
 
-Il n'y a pas de runner de migrations : les scripts SQL dans `migrations/` se lancent à la main, une seule fois, dans l'ordre :
+Il n'y a pas de runner de migrations : les scripts SQL dans `public/migrations` se lancent à la main, une seule fois, dans l'ordre :
 
 ```
 cp moncv.sqlite moncv_template.sqlite

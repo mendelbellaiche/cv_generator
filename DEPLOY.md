@@ -27,10 +27,15 @@ sudo systemctl restart apache2
 
 ## 1. Récupérer le code
 
+Sur le serveur, le projet est cloné dans `/var/www` et le document root du serveur web pointe sur `/var/www/html` (= le dossier `public/` du repo).
+
 ```
-git clone <repo> cv_generator
-cd cv_generator
+git clone <repo> /var/www/cv_generator
+ln -s /var/www/cv_generator/public /var/www/html
+cd /var/www/cv_generator
 ```
+
+(Adapter selon l'installation existante : `/var/www/html` peut être directement le dossier `public/` copié ou lié en symlink, l'essentiel étant que le document root serve son contenu.)
 
 ## 2. Installer les dépendances PHP
 
@@ -40,10 +45,10 @@ composer install --no-dev --optimize-autoloader
 
 ## 3. Configurer l'admin
 
-Le fichier `admin/.env` n'est **pas** versionné (voir `.gitignore`). Le créer sur le serveur :
+Le fichier `.env` n'est **pas** versionné (voir `.gitignore`). Il est chargé depuis la racine du projet, deux niveaux au-dessus de `public/admin` (voir `public/admin/auth.php`), soit `/var/www/.env` puisque `public/` = `/var/www/html`. Le créer sur le serveur :
 
 ```
-cp admin/.env.example admin/.env   # si le fichier d'exemple existe, sinon le créer directement
+touch /var/www/.env
 ```
 
 Contenu attendu :
@@ -63,9 +68,10 @@ Copier la sortie dans `ADMIN_PASSWORD_HASH`.
 
 ## 4. Base de données SQLite
 
-`moncv.sqlite` n'est pas non plus versionné. Partir du template fourni :
+`public/moncv.sqlite` (donc `/var/www/html/moncv.sqlite`) n'est pas non plus versionné. Partir du template fourni :
 
 ```
+cd /var/www/html
 cp moncv_template.sqlite moncv.sqlite
 ```
 
@@ -76,7 +82,7 @@ sqlite3 moncv.sqlite < migrations/001_add_cv_versions.sql
 sqlite3 moncv.sqlite < migrations/002_add_primary_version.sql
 ```
 
-> Si `moncv.sqlite` existe déjà en production, ne rejouer que les migrations pas encore appliquées.
+> Si `public/moncv.sqlite` existe déjà en production, ne rejouer que les migrations pas encore appliquées.
 
 ## 5. Permissions
 
@@ -89,16 +95,16 @@ chmod 664 moncv.sqlite
 
 ## 6. Configuration du serveur web
 
-Document root = racine du projet (le fichier `index.php` à la racine sert la page publique, `admin/index.php` l'espace admin).
+Document root = `/var/www/html`, qui correspond au dossier `public/` du projet (`public/index.php` sert la page publique, `public/admin/index.php` l'espace admin). Le fichier `.env` reste hors du document root, dans `/var/www/.env`, donc jamais accessible via le serveur web.
 
 Exemple Apache (vhost) :
 
 ```apache
 <VirtualHost *:80>
     ServerName moncv.example.com
-    DocumentRoot /var/www/cv_generator
+    DocumentRoot /var/www/html
 
-    <Directory /var/www/cv_generator>
+    <Directory /var/www/html>
         AllowOverride All
         Require all granted
     </Directory>
@@ -116,7 +122,7 @@ Exemple Nginx + PHP-FPM :
 server {
     listen 80;
     server_name moncv.example.com;
-    root /var/www/cv_generator;
+    root /var/www/html;
     index index.php;
 
     location ~ \.(sqlite|env)$ {
@@ -148,4 +154,4 @@ git pull
 composer install --no-dev --optimize-autoloader
 ```
 
-Rejouer les nouvelles migrations SQL ajoutées dans `migrations/` (comparer avec ce qui a déjà été appliqué en prod), puis vérifier `admin/.env` si de nouvelles clés sont apparues.
+Rejouer les nouvelles migrations SQL ajoutées dans `public/migrations` (comparer avec ce qui a déjà été appliqué en prod), puis vérifier `/var/www/.env` si de nouvelles clés sont apparues.
