@@ -60,7 +60,7 @@ if ($currentVersionId === null) {
 
     <div class="preview-toolbar">
         <h2>Preview du CV</h2>
-        <a href="/cv.php?version=<?= $currentVersionId ?>" target="_blank" class="btn btn-primary">Télécharger le PDF</a>
+        <a href="/cv.php?version=<?= $currentVersionId ?>" target="_blank" class="btn btn-primary">Ouvre le CV dans une nouvelle fenêtre</a>
     </div>
 
     <div class="preview-frame-wrapper">

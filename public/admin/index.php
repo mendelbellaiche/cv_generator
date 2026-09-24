@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'] ?? '';
     $name = trim($_POST['name'] ?? '');
     $templateKey = $_POST['template_key'] ?? 'default';
+    $atsFriendly = isset($_POST['ats_friendly']) ? 1 : 0;
 
     if (!array_key_exists($templateKey, cvTemplateOptions())) {
         $templateKey = 'default';
@@ -22,15 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($name !== '') {
         if ($id !== '') {
-            $db->query("UPDATE cv_versions SET name = :name, template_key = :template_key, updated_at = datetime('now') WHERE id = :id", [
+            $db->query("UPDATE cv_versions SET name = :name, template_key = :template_key, ats_friendly = :ats_friendly, updated_at = datetime('now') WHERE id = :id", [
                 'name'         => $name,
                 'template_key' => $templateKey,
+                'ats_friendly' => $atsFriendly,
                 'id'           => $id
             ]);
         } else {
-            $db->query("INSERT INTO cv_versions (name, template_key) VALUES (:name, :template_key)", [
+            $db->query("INSERT INTO cv_versions (name, template_key, ats_friendly) VALUES (:name, :template_key, :ats_friendly)", [
                 'name'         => $name,
-                'template_key' => $templateKey
+                'template_key' => $templateKey,
+                'ats_friendly' => $atsFriendly
             ]);
             $newId = (int) $db->getPdo()->lastInsertId();
 
@@ -65,9 +68,10 @@ if (isset($_GET['duplicate'])) {
     if ($source) {
         $db->getPdo()->beginTransaction();
 
-        $db->query("INSERT INTO cv_versions (name, template_key) VALUES (:name, :template_key)", [
+        $db->query("INSERT INTO cv_versions (name, template_key, ats_friendly) VALUES (:name, :template_key, :ats_friendly)", [
             'name'         => $source['name'] . ' (copie)',
-            'template_key' => $source['template_key']
+            'template_key' => $source['template_key'],
+            'ats_friendly' => $source['ats_friendly']
         ]);
         $newId = (int) $db->getPdo()->lastInsertId();
 
@@ -209,6 +213,11 @@ if (isset($_GET['edit'])) {
             </div>
         </div>
 
+        <div class="mb-3 form-check">
+            <input type="checkbox" name="ats_friendly" id="ats_friendly" class="form-check-input" value="1" <?= !empty($editingVersion['ats_friendly']) ? 'checked' : '' ?> />
+            <label for="ats_friendly" class="form-check-label">CV ATS-friendly (mise en page simplifiée, sans icônes ni tableaux, pour les logiciels de tri de candidatures)</label>
+        </div>
+
         <div>
             <input type="submit" value="<?= $editingVersion ? 'Enregistrer' : 'Créer cette version' ?>" class="btn btn-primary" />
             <?php if ($editingVersion): ?>
@@ -231,6 +240,9 @@ if (isset($_GET['edit'])) {
                                 <strong><?= htmlspecialchars($version['name']) ?></strong>
                                 <?php if ($version['is_primary']): ?>
                                     <span class="badge bg-primary ms-2">CV principal</span>
+                                <?php endif; ?>
+                                <?php if ($version['ats_friendly']): ?>
+                                    <span class="badge bg-secondary ms-2">ATS-friendly</span>
                                 <?php endif; ?>
                             </div>
                             <div class="version-meta">

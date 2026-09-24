@@ -26,5 +26,6 @@ extract(loadCvData($db, $versionId));
 $iconsPath = __DIR__ . '/../images/';
 $profileImagePath = __DIR__ . '/../images/custom/' . ($information['image_path'] ?? '');
 $renderTarget = 'html';
+$atsFriendly = (bool) $version['ats_friendly'];
 
 require cvTemplateResolveFile($version['template_key']);
