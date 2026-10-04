@@ -8,6 +8,7 @@ if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
 
 require __DIR__.'/../utils/Database.php';
 require __DIR__.'/../utils/CvTemplates.php';
+require __DIR__.'/../utils/CvVersion.php';
 
 $db = Database::getInstance(__DIR__ . '/../moncv.sqlite');
 
@@ -56,6 +57,8 @@ if (isset($_GET['primary'])) {
     $db->query("UPDATE cv_versions SET is_primary = 0", []);
     $db->query("UPDATE cv_versions SET is_primary = 1 WHERE id = :id", ['id' => $id]);
     $db->getPdo()->commit();
+
+    $_SESSION['cv_version_id'] = $id;
 
     header('Location: /admin/index.php');
     exit;
@@ -175,10 +178,11 @@ if (isset($_GET['edit'])) {
 <body>
 <?php
     // aside.php a besoin de $currentVersionId pour construire ses liens ; le
-    // tableau de bord n'a pas de version "active" propre, on retombe donc sur
-    // la première version existante (ou 0 si aucune) pour que les liens de la
-    // barre latérale restent fonctionnels.
-    $currentVersionId = $versions[0]['id'] ?? 0;
+    // tableau de bord n'a pas de version "active" propre. On privilégie la
+    // version marquée "CV principal" (c'est elle que l'utilisateur a choisi
+    // de mettre en avant), sinon on retombe sur la résolution standard.
+    $primaryVersion = $db->query("SELECT id FROM cv_versions WHERE is_primary = 1", [])->fetch();
+    $currentVersionId = $primaryVersion ? (int) $primaryVersion['id'] : (cvVersionResolveCurrent($db) ?? 0);
 ?>
 <?php require_once("includes/nav.php"); ?>
 <?php require_once("includes/aside.php"); ?>
