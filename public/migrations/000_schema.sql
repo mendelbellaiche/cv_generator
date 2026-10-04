@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS cv_versions (
     template_key TEXT NOT NULL DEFAULT 'default',
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    is_primary INTEGER NOT NULL DEFAULT 0
+    is_primary INTEGER NOT NULL DEFAULT 0,
+    ats_friendly INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS address
