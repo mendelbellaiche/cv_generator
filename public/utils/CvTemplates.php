@@ -5,6 +5,14 @@ const CV_TEMPLATES = [
         'label' => 'Modèle par défaut',
         'file'  => __DIR__ . '/../templates/cv.php',
     ],
+    'modern' => [
+        'label' => 'Moderne (bandeau bleu)',
+        'file'  => __DIR__ . '/../templates/cv-modern.php',
+    ],
+    'elegant' => [
+        'label' => 'Élégant (serif & doré)',
+        'file'  => __DIR__ . '/../templates/cv-elegant.php',
+    ],
 ];
 
 function cvTemplateResolveFile(string $key): string

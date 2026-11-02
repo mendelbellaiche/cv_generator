@@ -12,6 +12,27 @@ require __DIR__.'/../utils/CvVersion.php';
 
 $db = Database::getInstance(__DIR__ . '/../moncv.sqlite');
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'set_template') {
+    $templateKey = $_POST['template_key'] ?? '';
+    if (array_key_exists($templateKey, cvTemplateOptions())) {
+        $db->query("UPDATE cv_versions SET template_key = :template_key, updated_at = datetime('now') WHERE id = :id", [
+            'template_key' => $templateKey,
+            'id'           => (int) ($_POST['id'] ?? 0),
+        ]);
+    }
+    header('Location: /admin/index.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'toggle_ats') {
+    $db->query("UPDATE cv_versions SET ats_friendly = :ats_friendly, updated_at = datetime('now') WHERE id = :id", [
+        'ats_friendly' => isset($_POST['ats_friendly']) ? 1 : 0,
+        'id'           => (int) ($_POST['id'] ?? 0),
+    ]);
+    header('Location: /admin/index.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'] ?? '';
     $name = trim($_POST['name'] ?? '');
@@ -195,6 +216,54 @@ if (isset($_GET['edit'])) {
             color: #3730A3;
         }
 
+        .version-card .meta-design-form {
+            margin: 0;
+            padding-right: 4px;
+            transition: background 0.15s;
+        }
+
+        .version-card .meta-design-form:hover {
+            background: #E0E7FF;
+        }
+
+        .version-card .meta-ats-form {
+            margin: 0;
+            padding-left: 10px;
+            min-height: 0;
+        }
+
+        .version-card .meta-ats-form .form-check-input {
+            float: none;
+            margin: 0 4px 0 0;
+            cursor: pointer;
+        }
+
+        .version-card .meta-ats-form .form-check-label {
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .version-card .meta-ats-form.is-on {
+            background: #E7F6EC;
+            color: #1E7B3C;
+        }
+
+        .version-card .meta-design-form label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .version-card .meta-design-form select {
+            border: none;
+            background: transparent;
+            color: #3730A3;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            padding: 0 2px;
+            outline: none;
+        }
+
         .version-card .version-actions {
             display: flex;
             gap: 8px;
@@ -291,7 +360,22 @@ if (isset($_GET['edit'])) {
                             </div>
                             <div class="version-meta">
                                 <?php $fmtDate = static fn($d) => $d ? date('d/m/Y à H:i', strtotime($d)) : '—'; ?>
-                                <span class="meta-chip meta-design">🎨 <strong><?= htmlspecialchars(cvTemplateOptions()[$version['template_key']]['label'] ?? $version['template_key']) ?></strong></span>
+                                <form method="post" action="/admin/index.php" class="meta-chip meta-design meta-design-form" title="Changer le design">
+                                    <input type="hidden" name="action" value="set_template" />
+                                    <input type="hidden" name="id" value="<?= $version['id'] ?>" />
+                                    <label for="tpl-<?= $version['id'] ?>">🎨</label>
+                                    <select name="template_key" id="tpl-<?= $version['id'] ?>" onchange="this.form.submit()">
+                                        <?php foreach (cvTemplateOptions() as $key => $template): ?>
+                                            <option value="<?= htmlspecialchars($key) ?>" <?= $version['template_key'] === $key ? 'selected' : '' ?>><?= htmlspecialchars($template['label']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </form>
+                                <form method="post" action="/admin/index.php" class="meta-chip meta-ats-form form-check form-switch<?= $version['ats_friendly'] ? ' is-on' : '' ?>" title="Mise en page simplifiée pour les logiciels de tri de candidatures">
+                                    <input type="hidden" name="action" value="toggle_ats" />
+                                    <input type="hidden" name="id" value="<?= $version['id'] ?>" />
+                                    <input type="checkbox" role="switch" name="ats_friendly" value="1" id="ats-<?= $version['id'] ?>" class="form-check-input" <?= $version['ats_friendly'] ? 'checked' : '' ?> onchange="this.form.submit()" />
+                                    <label for="ats-<?= $version['id'] ?>" class="form-check-label">ATS</label>
+                                </form>
                                 <span class="meta-chip" title="<?= htmlspecialchars($version['created_at']) ?>">Créée le <strong><?= $fmtDate($version['created_at']) ?></strong></span>
                                 <?php if ($version['updated_at'] && $version['updated_at'] !== $version['created_at']): ?>
                                     <span class="meta-chip" title="<?= htmlspecialchars($version['updated_at']) ?>">Modifiée le <strong><?= $fmtDate($version['updated_at']) ?></strong></span>
@@ -302,11 +386,11 @@ if (isset($_GET['edit'])) {
                             <a href="/admin/information.php?v=<?= $version['id'] ?>" class="btn btn-sm btn-primary">Modifier le contenu</a>
                             <a href="/admin/preview.php?v=<?= $version['id'] ?>" class="btn btn-sm btn-outline-primary">Aperçu</a>
                             <span class="actions-separator"></span>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <a href="/admin/index.php?edit=<?= $version['id'] ?>" class="btn btn-outline-secondary">Renommer</a>
-                                <a href="/admin/index.php?duplicate=<?= $version['id'] ?>" class="btn btn-outline-secondary">Dupliquer</a>
+                            <div class="d-flex flex-wrap gap-2" role="group">
+                                <a href="/admin/index.php?edit=<?= $version['id'] ?>" class="btn btn-sm btn-outline-secondary">⚙️ Paramètres</a>
+                                <a href="/admin/index.php?duplicate=<?= $version['id'] ?>" class="btn btn-sm btn-outline-secondary">Dupliquer</a>
                                 <?php if (!$version['is_primary']): ?>
-                                    <a href="/admin/index.php?primary=<?= $version['id'] ?>" class="btn btn-outline-secondary">Définir principal</a>
+                                    <a href="/admin/index.php?primary=<?= $version['id'] ?>" class="btn btn-sm btn-outline-secondary">Définir principal</a>
                                 <?php endif; ?>
                             </div>
                             <span class="actions-separator"></span>
