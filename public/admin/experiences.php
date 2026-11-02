@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $position = $_POST['position'] ?? '';
     $city = $_POST['city'] ?? '';
     $startDate = $_POST['start_date'] ?? '';
-    $endDate = $_POST['end_date'] ?? '';
+    $endDate = !empty($_POST['end_date_ongoing']) ? 'En cours' : ($_POST['end_date'] ?? '');
     $description = $_POST['description'] ?? '';
 
     $techStack = array_filter(array_map('trim', explode(',', $_POST['tech_stack'] ?? '')));
@@ -105,7 +105,11 @@ if (isset($_GET['switch_category'])) {
 if (isset($_GET['move'], $_GET['direction'])) {
     $current = $db->query("SELECT * FROM experiences WHERE id = :id AND cv_version_id = :v", ['id' => $_GET['move'], 'v' => $currentVersionId])->fetch();
 
-    if ($current) {
+    if ($current && in_array($_GET['direction'], ['top', 'bottom'], true)) {
+        $bound = $db->query("SELECT MIN(sort_order) AS min_order, MAX(sort_order) AS max_order FROM experiences WHERE cv_version_id = :v", ['v' => $currentVersionId])->fetch();
+        $newOrder = $_GET['direction'] === 'top' ? (int) $bound['min_order'] - 1 : (int) $bound['max_order'] + 1;
+        $db->query("UPDATE experiences SET sort_order = :order WHERE id = :id", ['order' => $newOrder, 'id' => $current['id']]);
+    } elseif ($current) {
         $neighbor = $_GET['direction'] === 'up'
             ? $db->query("SELECT * FROM experiences WHERE cv_version_id = :v AND category = :c AND sort_order < :order ORDER BY sort_order DESC LIMIT 1", ['c' => $current['category'], 'v' => $currentVersionId, 'order' => $current['sort_order']])->fetch()
             : $db->query("SELECT * FROM experiences WHERE cv_version_id = :v AND category = :c AND sort_order > :order ORDER BY sort_order ASC LIMIT 1", ['c' => $current['category'], 'v' => $currentVersionId, 'order' => $current['sort_order']])->fetch();
@@ -275,7 +279,12 @@ function formatMonthYear(?string $value): string
 
                 <div class="mb-3">
                     <label for="end_date">Date de fin</label>
-                    <input type="month" value="<?= htmlspecialchars($editingExperience['end_date'] ?? '') ?>" name="end_date" id="end_date" class="form-control" />
+                    <?php $isOngoing = ($editingExperience['end_date'] ?? '') === 'En cours'; ?>
+                    <input type="month" value="<?= $isOngoing ? '' : htmlspecialchars($editingExperience['end_date'] ?? '') ?>" name="end_date" id="end_date" class="form-control" <?= $isOngoing ? 'disabled' : '' ?> />
+                    <div class="form-check mt-1">
+                        <input type="checkbox" class="form-check-input" name="end_date_ongoing" id="end_date_ongoing" value="1" <?= $isOngoing ? 'checked' : '' ?> onchange="document.getElementById('end_date').disabled = this.checked; if (this.checked) document.getElementById('end_date').value = '';" />
+                        <label class="form-check-label" for="end_date_ongoing">En cours</label>
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -306,12 +315,12 @@ function formatMonthYear(?string $value): string
 
     <hr />
 
-    <div class="mt-4">
+    <div class="mt-4" id="experiences-list">
         <?php if (empty($experiences)): ?>
             <p>Aucune expérience enregistrée.</p>
         <?php else: ?>
             <?php foreach ($experiences as $index => $experience): ?>
-                <div class="experience-card">
+                <div class="experience-card" id="experience-<?= $experience['id'] ?>">
                     <div class="row align-items-start">
                         <div class="col-12 col-md-9">
                             <div class="experience-position"><strong><?= htmlspecialchars($experience['position']) ?></strong></div>
@@ -321,7 +330,10 @@ function formatMonthYear(?string $value): string
                                     — <?= htmlspecialchars($experience['city']) ?>
                                 <?php endif; ?>
                             </div>
-                            <span class="experience-dates"><?= htmlspecialchars(formatMonthYear($experience['start_date'])) ?> - <?= htmlspecialchars(formatMonthYear($experience['end_date'])) ?></span>
+                            <?php $experienceDates = implode(' - ', array_filter([formatMonthYear($experience['start_date']), formatMonthYear($experience['end_date'])], 'strlen')); ?>
+                            <?php if ($experienceDates !== ''): ?>
+                                <span class="experience-dates"><?= htmlspecialchars($experienceDates) ?></span>
+                            <?php endif; ?>
                             <?php if (!empty($experience['page_break_before'])): ?>
                                 <span class="badge bg-warning text-dark">Saut de page avant</span>
                             <?php endif; ?>
@@ -337,12 +349,14 @@ function formatMonthYear(?string $value): string
                             <?php endif; ?>
                         </div>
                         <div class="col-12 col-md-3 experience-actions mt-3 mt-md-0">
-                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=up') ?>" class="btn btn-secondary <?= $index === 0 ? 'disabled' : '' ?>">&uarr;</a>
-                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=down') ?>" class="btn btn-secondary <?= $index === count($experiences) - 1 ? 'disabled' : '' ?>">&darr;</a>
-                            <a href="<?= $pageUrl('toggle_page_break=' . $experience['id']) ?>" class="btn btn-secondary" title="Basculer le saut de page avant cette expérience">&#8676;|</a>
-                            <a href="<?= $pageUrl('switch_category=' . $experience['id']) ?>" class="btn btn-secondary" title="Changer de section"><?= $category === 'freelance' ? '&rarr; Expériences' : '&rarr; Freelance / projets' ?></a>
+                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=top') ?>" class="btn btn-secondary js-keep-scroll <?= $index === 0 ? 'disabled' : '' ?>" title="Tout en haut">&#8648;</a>
+                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=up') ?>" class="btn btn-secondary js-keep-scroll <?= $index === 0 ? 'disabled' : '' ?>">&uarr;</a>
+                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=down') ?>" class="btn btn-secondary js-keep-scroll <?= $index === count($experiences) - 1 ? 'disabled' : '' ?>">&darr;</a>
+                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=bottom') ?>" class="btn btn-secondary js-keep-scroll <?= $index === count($experiences) - 1 ? 'disabled' : '' ?>" title="Tout en bas">&#8650;</a>
+                            <a href="<?= $pageUrl('toggle_page_break=' . $experience['id']) ?>" class="btn btn-secondary js-keep-scroll" title="Basculer le saut de page avant cette expérience">&#8676;|</a>
+                            <a href="<?= $pageUrl('switch_category=' . $experience['id']) ?>" class="btn btn-secondary js-keep-scroll" title="Changer de section"><?= $category === 'freelance' ? '&rarr; Expériences' : '&rarr; Freelance / projets' ?></a>
                             <a href="<?= $pageUrl('edit=' . $experience['id']) ?>" class="btn btn-primary">Modifier</a>
-                            <a href="<?= $pageUrl('delete=' . $experience['id']) ?>" class="btn btn-danger" onclick="return confirm('Supprimer cette expérience ?');">Supprimer</a>
+                            <a href="<?= $pageUrl('delete=' . $experience['id']) ?>" class="btn btn-danger js-keep-scroll" onclick="return confirm('Supprimer cette expérience ?');">Supprimer</a>
                         </div>
                     </div>
                 </div>
@@ -353,6 +367,29 @@ function formatMonthYear(?string $value): string
 
 </main>
 
+<script>
+    // Les boutons d'ordre / section / suppression s'exécutent sans recharger la page :
+    // on appelle l'URL en arrière-plan puis on remplace uniquement la liste, la position de défilement ne bouge pas.
+    document.addEventListener('click', async function (event) {
+        const link = event.target.closest('.js-keep-scroll');
+        if (!link || event.defaultPrevented || link.classList.contains('disabled')) {
+            return;
+        }
+        event.preventDefault();
+
+        try {
+            const response = await fetch(link.href, { credentials: 'same-origin' });
+            const html = await response.text();
+            const freshList = new DOMParser().parseFromString(html, 'text/html').getElementById('experiences-list');
+            if (!response.ok || !freshList) {
+                throw new Error('Réponse inattendue');
+            }
+            document.getElementById('experiences-list').innerHTML = freshList.innerHTML;
+        } catch (e) {
+            window.location.href = link.href;
+        }
+    });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
     const descriptionQuill = new Quill('#descriptionEditor', {

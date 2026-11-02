@@ -47,8 +47,8 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
         body {
             font-family: 'Trebuchet MS', sans-serif;
             font-size: 11px;
-            padding-top: 40px;
-            padding-bottom: 40px;
+            padding-top: 25px;
+            padding-bottom: 25px;
         }
 
         .cv-sidebar-background {
@@ -79,25 +79,25 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
         .cv-section-title {
             font-size: 2em;
             font-style: italic;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .cv-divider {
             background: #DFDFDF;
             height: 1px;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .cv-entry-description ul,
         .cv-entry-description ol {
             padding-left: 18px;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .cv-entry-description li {
             text-align: justify;
-            padding-bottom: 5px;
+            padding-bottom: 2px;
         }
 
         .cv-interests ul {
@@ -106,7 +106,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
         }
 
         .cv-interests li {
-            padding-bottom: 8px;
+            padding-bottom: 4px;
             font-size: 1.1em;
         }
 
@@ -130,7 +130,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
 
         body.ats-mode .cv-entry-row {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         body.ats-mode .cv-entry-row-header {
@@ -156,7 +156,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
 <aside class="cv-sidebar">
 
     <?php if ($logoMeBase64 && !$atsFriendly): ?>
-        <p><img src="<?= $logoMeBase64 ?>" alt="Photo de profile" style="width: 60%; margin-left: 20%; margin-bottom: 20px; display: block; border-radius: 50%;"></p>
+        <p><img src="<?= $logoMeBase64 ?>" alt="Photo de profile" style="width: 60%; margin-left: 20%; margin-bottom: 12px; display: block; border-radius: 50%;"></p>
     <?php endif; ?>
 
     <h1><?= htmlspecialchars($fullName) ?></h1>
@@ -164,27 +164,27 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
         <h2 style="font-size: 1.2em; margin-bottom: 30px;"><?= htmlspecialchars($information['job_title']) ?></h2>
     <?php endif; ?>
     <?php if (!empty($information['summary'])): ?>
-        <p style="font-size: 0.9em; line-height: 1.4; margin-top: -20px; margin-bottom: 30px;"><?= nl2br(htmlspecialchars($information['summary'])) ?></p>
+        <p style="font-size: 0.9em; line-height: 1.4; margin-top: -15px; margin-bottom: 15px;"><?= nl2br(htmlspecialchars($information['summary'])) ?></p>
     <?php endif; ?>
 
-    <h3 style="border-bottom: 2px solid #6A6A6A; padding-bottom: 2px; margin-bottom: 20px;">Détails</h3>
+    <h3 style="border-bottom: 2px solid #6A6A6A; padding-bottom: 2px; margin-bottom: 10px;">Détails</h3>
 
     <?php if (!empty($information['email'])): ?>
-        <p style="margin-bottom: 8px;">
+        <p style="margin-bottom: 5px;">
             <?php if (!$atsFriendly): ?><img src="<?= $logoLetterBase64 ?>" alt="logo email" style="width: 16px; margin-right: 2px; position: relative; top: 4px;" /> <?php endif; ?>
             <span><?= htmlspecialchars($information['email']) ?></span>
         </p>
     <?php endif; ?>
 
     <?php if (!empty($information['phone'])): ?>
-        <p style="margin-bottom: 8px;">
+        <p style="margin-bottom: 5px;">
             <?php if (!$atsFriendly): ?><img src="<?= $logoTelBase64 ?>" alt="logo telephone" style="width: 16px; margin-right: 2px; position: relative; top: 4px;" /> <?php endif; ?>
             <span><?= htmlspecialchars($information['phone']) ?></span>
         </p>
     <?php endif; ?>
 
     <?php if (!empty($address['line']) || !empty($address['city'])): ?>
-        <p style="margin-bottom: 8px;">
+        <p style="margin-bottom: 5px;">
             <?php if (!$atsFriendly): ?><img src="<?= $logoPinBase64 ?>" alt="logo adresse" style="width: 16px; margin-right: 2px; position: relative; top: 4px;" /> <?php endif; ?>
             <?php
             $addrLine = trim($address['line'] ?? '');
@@ -199,14 +199,14 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
     <?php endif; ?>
 
     <?php if (!empty($information['birthdate'])): ?>
-        <p style="margin-bottom: 8px;">
+        <p style="margin-bottom: 5px;">
             <?php if (!$atsFriendly): ?><img src="<?= $logoCakeBase64 ?>" alt="logo date de naissance" style="width: 20px; margin-right: 0; position: relative; top: 4px;" /> <?php endif; ?>
             <span><?= htmlspecialchars(cvFormatFullDate($information['birthdate'])) ?></span>
         </p>
     <?php endif; ?>
 
     <?php if (!empty($information['linkedin_url'])): ?>
-        <p style="margin-bottom: 8px;">
+        <p style="margin-bottom: 5px;">
             <a href="<?= htmlspecialchars($information['linkedin_url']) ?>" target="_blank">
                 <?php if ($atsFriendly): ?>
                     <span>LinkedIn : <?= htmlspecialchars($information['linkedin_url']) ?></span>
@@ -218,7 +218,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
     <?php endif; ?>
 
     <?php if (!empty($information['github_url'])): ?>
-        <p style="margin-bottom: 8px;">
+        <p style="margin-bottom: 5px;">
             <a href="<?= htmlspecialchars($information['github_url']) ?>" target="_blank" style="text-decoration: none; color: inherit;">
                 <?php if ($atsFriendly): ?>
                     <span>GitHub : <?= htmlspecialchars($information['github_url']) ?></span>
@@ -230,10 +230,10 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
     <?php endif; ?>
 
     <?php if (!empty($skills)): ?>
-        <h3 style="border-bottom: 2px solid #6A6A6A; padding-bottom: 2px; margin-top: 20px; margin-bottom: 20px;">Compétences techniques</h3>
+        <h3 style="border-bottom: 2px solid #6A6A6A; padding-bottom: 2px; margin-top: 15px; margin-bottom: 10px;">Compétences techniques</h3>
 
         <?php foreach ($skills as $skill): ?>
-            <p style="margin-bottom: 8px;"><b><?= htmlspecialchars($skill['category']) ?></b>:<br /><?= htmlspecialchars($skill['items']) ?></p>
+            <p style="margin-bottom: 5px;"><b><?= htmlspecialchars($skill['category']) ?></b>:<br /><?= htmlspecialchars($skill['items']) ?></p>
         <?php endforeach; ?>
     <?php endif; ?>
 </aside>
@@ -248,7 +248,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
     ?>
     <?php foreach ($experienceSections as $sectionTitle => $sectionExperiences): ?>
     <?php if (!empty($sectionExperiences)): ?>
-        <p class="cv-section-title" style="margin-bottom: 40px;"><?= htmlspecialchars($sectionTitle) ?></p>
+        <p class="cv-section-title" style="margin-bottom: 15px;"><?= htmlspecialchars($sectionTitle) ?></p>
 
         <?php foreach ($sectionExperiences as $experience): ?>
             <?php if (!empty($experience['page_break_before'])): ?>
@@ -263,13 +263,13 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
                 <div class="cv-entry-row">
                     <div class="cv-entry-row-header">
                         <b><?= htmlspecialchars($experience['position']) ?></b>
-                        <b><?= htmlspecialchars(cvFormatMonthYear($experience['start_date'])) ?> - <?= htmlspecialchars(cvFormatMonthYear($experience['end_date'])) ?></b>
+                        <b><?= htmlspecialchars(implode(' - ', array_filter([cvFormatMonthYear($experience['start_date']), cvFormatMonthYear($experience['end_date'])], 'strlen'))) ?></b>
                     </div>
-                    <div style="color: #8E8E8E; padding-bottom: 10px;">
+                    <div style="color: #8E8E8E; padding-bottom: 4px;">
                         <?= htmlspecialchars($experience['company']) ?><?php if (!empty($experience['city'])): ?>, <?= htmlspecialchars($experience['city']) ?><?php endif; ?>
                     </div>
                     <?php if (!empty($experience['description'])): ?>
-                        <div class="cv-entry-description" style="padding-bottom: 10px;">
+                        <div class="cv-entry-description" style="padding-bottom: 4px;">
                             <?= $experience['description'] ?>
                         </div>
                     <?php endif; ?>
@@ -281,19 +281,19 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
                     <?php endif; ?>
                 </div>
             <?php else: ?>
-                <table style="margin-bottom: 20px; width: 100%;">
+                <table style="margin-bottom: 12px; width: 100%;">
                     <tr>
                         <td><b><?= htmlspecialchars($experience['position']) ?></b></td>
-                        <td style="text-align: right;"><b><?= htmlspecialchars(cvFormatMonthYear($experience['start_date'])) ?> - <?= htmlspecialchars(cvFormatMonthYear($experience['end_date'])) ?></b></td>
+                        <td style="text-align: right;"><b><?= htmlspecialchars(implode(' - ', array_filter([cvFormatMonthYear($experience['start_date']), cvFormatMonthYear($experience['end_date'])], 'strlen'))) ?></b></td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="color: #8E8E8E; padding-bottom: 10px;">
+                        <td colspan="2" style="color: #8E8E8E; padding-bottom: 4px;">
                             <?= htmlspecialchars($experience['company']) ?><?php if (!empty($experience['city'])): ?>, <?= htmlspecialchars($experience['city']) ?><?php endif; ?>
                         </td>
                     </tr>
                     <?php if (!empty($experience['description'])): ?>
                         <tr>
-                            <td colspan="2" class="cv-entry-description" style="padding-bottom: 10px;">
+                            <td colspan="2" class="cv-entry-description" style="padding-bottom: 4px;">
                                 <?= $experience['description'] ?>
                             </td>
                         </tr>
@@ -315,7 +315,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
     <?php endforeach; ?>
 
     <?php if (!empty($formations)): ?>
-        <p class="cv-section-title" style="margin-bottom: 40px;">Formations</p>
+        <p class="cv-section-title" style="margin-bottom: 15px;">Formations</p>
 
         <?php foreach ($formations as $formation): ?>
             <?php if ($atsFriendly): ?>
@@ -324,29 +324,29 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
                         <b><?= htmlspecialchars($formation['degree']) ?></b>
                         <b><?= htmlspecialchars(implode(' - ', array_filter([trim($formation['start_date'] ?? ''), trim($formation['end_date'] ?? '')], 'strlen'))) ?></b>
                     </div>
-                    <div style="color: #8E8E8E; padding-bottom: 10px;">
+                    <div style="color: #8E8E8E; padding-bottom: 4px;">
                         <?= htmlspecialchars($formation['school']) ?><?php if (!empty($formation['city'])): ?>, <?= htmlspecialchars($formation['city']) ?><?php endif; ?>
                     </div>
                     <?php if (!empty($formation['description'])): ?>
-                        <div class="cv-entry-description" style="padding-bottom: 10px;">
+                        <div class="cv-entry-description" style="padding-bottom: 4px;">
                             <?= $formation['description'] ?>
                         </div>
                     <?php endif; ?>
                 </div>
             <?php else: ?>
-                <table style="margin-bottom: 20px; width: 100%;">
+                <table style="margin-bottom: 12px; width: 100%;">
                     <tr>
                         <td><b><?= htmlspecialchars($formation['degree']) ?></b></td>
                         <td style="text-align: right;"><b><?= htmlspecialchars(implode(' - ', array_filter([trim($formation['start_date'] ?? ''), trim($formation['end_date'] ?? '')], 'strlen'))) ?></b></td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="color: #8E8E8E; padding-bottom: 10px;">
+                        <td colspan="2" style="color: #8E8E8E; padding-bottom: 4px;">
                             <?= htmlspecialchars($formation['school']) ?><?php if (!empty($formation['city'])): ?>, <?= htmlspecialchars($formation['city']) ?><?php endif; ?>
                         </td>
                     </tr>
                     <?php if (!empty($formation['description'])): ?>
                         <tr>
-                            <td colspan="2" class="cv-entry-description" style="padding-bottom: 10px;">
+                            <td colspan="2" class="cv-entry-description" style="padding-bottom: 4px;">
                                 <?= $formation['description'] ?>
                             </td>
                         </tr>
@@ -363,7 +363,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
 
         <?php foreach ($certifications as $certification): ?>
             <?php if ($atsFriendly): ?>
-                <p style="margin-bottom: 20px;">
+                <p style="margin-bottom: 12px;">
                     <b><?= htmlspecialchars($certification['title']) ?></b><br />
                     <?php if (!empty($certification['exam_version'])): ?>
                         Exam Version: <b><?= htmlspecialchars($certification['exam_version']) ?></b><br />
@@ -371,7 +371,7 @@ $hobbyChunks = array_chunk($hobbies, (int) ceil(count($hobbies) / 2) ?: 1);
                     <?= htmlspecialchars($certification['year'] ?? '') ?>
                 </p>
             <?php else: ?>
-                <table style="margin-bottom: 20px; width: 100%;">
+                <table style="margin-bottom: 12px; width: 100%;">
                     <tr>
                         <?php if (!empty($certification['badge_path'])): ?>
                             <td style="width: 60px; vertical-align: middle;">
