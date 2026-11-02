@@ -163,15 +163,55 @@ if (isset($_GET['edit'])) {
         }
 
         .version-card .version-meta {
-            color: #8E8E8E;
-            font-size: 0.9em;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 8px;
+            margin-top: 8px;
+            font-size: 0.82em;
+        }
+
+        .version-card .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: #F3F4F6;
+            color: #6B7280;
+            white-space: nowrap;
+        }
+
+        .version-card .meta-chip strong {
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .version-card .meta-chip.meta-design {
+            background: #EEF2FF;
+            color: #4F46E5;
+        }
+
+        .version-card .meta-chip.meta-design strong {
+            color: #3730A3;
         }
 
         .version-card .version-actions {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             justify-content: flex-end;
+            align-items: center;
             flex-wrap: wrap;
+        }
+
+        .version-card .version-actions .btn {
+            white-space: nowrap;
+        }
+
+        .version-card .version-actions .actions-separator {
+            width: 1px;
+            align-self: stretch;
+            background: #DEE2E6;
+            margin: 0 4px;
         }
     </style>
 </head>
@@ -239,7 +279,7 @@ if (isset($_GET['edit'])) {
             <?php foreach ($versions as $version): ?>
                 <div class="version-card">
                     <div class="row align-items-start">
-                        <div class="col-12 col-md-8">
+                        <div class="col-12 col-xl">
                             <div class="version-name">
                                 <strong><?= htmlspecialchars($version['name']) ?></strong>
                                 <?php if ($version['is_primary']): ?>
@@ -250,20 +290,27 @@ if (isset($_GET['edit'])) {
                                 <?php endif; ?>
                             </div>
                             <div class="version-meta">
-                                Design : <?= htmlspecialchars(cvTemplateOptions()[$version['template_key']]['label'] ?? $version['template_key']) ?>
-                                — créée le <?= htmlspecialchars($version['created_at']) ?>
-                                — mise à jour le <?= htmlspecialchars($version['updated_at']) ?>
+                                <?php $fmtDate = static fn($d) => $d ? date('d/m/Y à H:i', strtotime($d)) : '—'; ?>
+                                <span class="meta-chip meta-design">🎨 <strong><?= htmlspecialchars(cvTemplateOptions()[$version['template_key']]['label'] ?? $version['template_key']) ?></strong></span>
+                                <span class="meta-chip" title="<?= htmlspecialchars($version['created_at']) ?>">Créée le <strong><?= $fmtDate($version['created_at']) ?></strong></span>
+                                <?php if ($version['updated_at'] && $version['updated_at'] !== $version['created_at']): ?>
+                                    <span class="meta-chip" title="<?= htmlspecialchars($version['updated_at']) ?>">Modifiée le <strong><?= $fmtDate($version['updated_at']) ?></strong></span>
+                                <?php endif; ?>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4 version-actions mt-3 mt-md-0">
-                            <a href="/admin/information.php?v=<?= $version['id'] ?>" class="btn btn-primary">Modifier le contenu</a>
-                            <a href="/admin/preview.php?v=<?= $version['id'] ?>" class="btn btn-secondary">Aperçu</a>
-                            <a href="/admin/index.php?edit=<?= $version['id'] ?>" class="btn btn-secondary">Renommer</a>
-                            <a href="/admin/index.php?duplicate=<?= $version['id'] ?>" class="btn btn-secondary">Dupliquer</a>
-                            <?php if (!$version['is_primary']): ?>
-                                <a href="/admin/index.php?primary=<?= $version['id'] ?>" class="btn btn-secondary">Définir comme principal</a>
-                            <?php endif; ?>
-                            <a href="/admin/index.php?delete=<?= $version['id'] ?>" class="btn btn-danger" onclick="return confirm('Supprimer cette version et tout son contenu ?');">Supprimer</a>
+                        <div class="col-12 col-xl-auto version-actions mt-3 mt-xl-0">
+                            <a href="/admin/information.php?v=<?= $version['id'] ?>" class="btn btn-sm btn-primary">Modifier le contenu</a>
+                            <a href="/admin/preview.php?v=<?= $version['id'] ?>" class="btn btn-sm btn-outline-primary">Aperçu</a>
+                            <span class="actions-separator"></span>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="/admin/index.php?edit=<?= $version['id'] ?>" class="btn btn-outline-secondary">Renommer</a>
+                                <a href="/admin/index.php?duplicate=<?= $version['id'] ?>" class="btn btn-outline-secondary">Dupliquer</a>
+                                <?php if (!$version['is_primary']): ?>
+                                    <a href="/admin/index.php?primary=<?= $version['id'] ?>" class="btn btn-outline-secondary">Définir principal</a>
+                                <?php endif; ?>
+                            </div>
+                            <span class="actions-separator"></span>
+                            <a href="/admin/index.php?delete=<?= $version['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cette version et tout son contenu ?');">Supprimer</a>
                         </div>
                     </div>
                 </div>
