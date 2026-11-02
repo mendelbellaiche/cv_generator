@@ -238,6 +238,11 @@ $period = static fn(?string $start, ?string $end): string =>
 <?php if (!empty($skills)): ?>
     <div class="section">
         <div class="section-title">Compétences</div>
+        <?php if ($atsFriendly): ?>
+            <?php foreach ($skills as $skill): ?>
+                <p style="margin-bottom: 3px;"><b><?= htmlspecialchars($skill['category']) ?> :</b> <?= htmlspecialchars($skill['items']) ?></p>
+            <?php endforeach; ?>
+        <?php else: ?>
         <table class="skills-table">
             <?php foreach ($skills as $skill): ?>
                 <tr>
@@ -246,6 +251,7 @@ $period = static fn(?string $start, ?string $end): string =>
                 </tr>
             <?php endforeach; ?>
         </table>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 

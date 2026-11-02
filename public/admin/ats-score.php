@@ -131,7 +131,7 @@ $checks[] = [
 // Règles liées à la mise en page réelle du rendu (dépendent du réglage "ATS-friendly" de la version).
 $checks[] = [
     'label'  => 'Mise en page en une seule colonne',
-    'pass'   => str_contains($renderedHtml, 'ats-mode'),
+    'pass'   => (cvTemplateOptions()[$version['template_key'] ?? 'default']['columns'] ?? 2) === 1 || str_contains($renderedHtml, 'ats-mode'),
     'weight' => 12,
     'tip'    => 'Ce CV utilise une mise en page en 2 colonnes (encart latéral + contenu). De nombreux ATS lisent le PDF colonne par colonne et peuvent mélanger les informations. Activez le mode "CV ATS-friendly" dans "Mes CV".',
 ];
