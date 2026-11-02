@@ -42,9 +42,11 @@
         $jobTitle = $_POST['job_title'] ?? "";
         $birthdate = $_POST['birthdate'] ?? "";
         $linkedinUrl = $_POST['linkedin_url'] ?? "";
+        $githubUrl = trim($_POST["github_url"] ?? "");
+        $summary = trim($_POST["summary"] ?? "");
 
 
-        $db->query("UPDATE information SET firstname = :firstname, lastname = :lastname, email = :email, phone = :phone, job_title = :job_title, birthdate = :birthdate, linkedin_url = :linkedin_url WHERE cv_version_id = :v", [
+        $db->query("UPDATE information SET firstname = :firstname, lastname = :lastname, email = :email, phone = :phone, job_title = :job_title, birthdate = :birthdate, linkedin_url = :linkedin_url, github_url = :github_url, summary = :summary WHERE cv_version_id = :v", [
             'firstname'    => $firstname,
             'lastname'     => $lastname,
             'email'        => $email,
@@ -52,6 +54,8 @@
             'job_title'    => $jobTitle,
             'birthdate'    => $birthdate,
             'linkedin_url' => $linkedinUrl,
+            'github_url'   => $githubUrl,
+            'summary'      => $summary,
             'v'            => $currentVersionId
         ]);
 
@@ -129,6 +133,11 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="summary">Résumé (2-3 lignes, affiché sous le titre)</label>
+                            <textarea name="summary" id="summary" class="form-control" rows="3" maxlength="400" placeholder="ex: Développeur passionné avec 5 ans d'expérience..."><?= htmlspecialchars($information['summary'] ?? "") ?></textarea>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="email">Email</label>
                             <input type="email" value="<?= $information['email'] ?? ""; ?>" name="email" id="email" class="form-control" />
                         </div>
@@ -146,6 +155,11 @@
                         <div class="mb-3">
                             <label for="linkedin_url">Lien LinkedIn</label>
                             <input type="url" value="<?= $information['linkedin_url'] ?? ""; ?>" name="linkedin_url" id="linkedin_url" class="form-control" placeholder="https://www.linkedin.com/in/..." />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="github_url">Lien GitHub</label>
+                            <input type="url" value="<?= htmlspecialchars($information['github_url'] ?? "") ?>" name="github_url" id="github_url" class="form-control" placeholder="https://github.com/..." />
                         </div>
                     </div>
                     <div class="col-12 col-md-6">

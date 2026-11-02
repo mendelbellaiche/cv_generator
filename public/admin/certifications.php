@@ -17,11 +17,31 @@ if ($currentVersionId === null) {
     exit;
 }
 
+const CERTIFICATION_BADGE_DIR = __DIR__ . '/../images/badges';
+
+function certificationBadgeUpload(int $certificationId): ?string
+{
+    if (!isset($_FILES['badge_image']) || $_FILES['badge_image']['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+
+    if (!is_dir(CERTIFICATION_BADGE_DIR)) {
+        mkdir(CERTIFICATION_BADGE_DIR, 0755, true);
+    }
+
+    $extension = strtolower(pathinfo($_FILES['badge_image']['name'], PATHINFO_EXTENSION)) ?: 'png';
+    $filename = 'badge-' . $certificationId . '-' . time() . '.' . $extension;
+    move_uploaded_file($_FILES['badge_image']['tmp_name'], CERTIFICATION_BADGE_DIR . '/' . $filename);
+
+    return $filename;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'] ?? '';
     $title = $_POST['title'] ?? '';
     $examVersion = $_POST['exam_version'] ?? '';
     $year = $_POST['year'] ?? '';
+    $removeBadge = isset($_POST['remove_badge']);
 
     if ($id !== '') {
         $db->query("UPDATE certifications SET title = :title, exam_version = :exam_version, year = :year WHERE id = :id AND cv_version_id = :v", [
@@ -31,6 +51,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'id'           => $id,
             'v'            => $currentVersionId
         ]);
+
+        $badgeFilename = certificationBadgeUpload((int) $id);
+        if ($badgeFilename !== null) {
+            $db->query("UPDATE certifications SET badge_path = :badge_path WHERE id = :id AND cv_version_id = :v", [
+                'badge_path' => $badgeFilename,
+                'id'         => $id,
+                'v'          => $currentVersionId
+            ]);
+        } elseif ($removeBadge) {
+            $db->query("UPDATE certifications SET badge_path = NULL WHERE id = :id AND cv_version_id = :v", [
+                'id' => $id,
+                'v'  => $currentVersionId
+            ]);
+        }
     } else {
         $maxOrder = $db->query("SELECT MAX(sort_order) AS max_order FROM certifications WHERE cv_version_id = :v", ['v' => $currentVersionId])->fetch();
         $nextOrder = ($maxOrder['max_order'] ?? 0) + 1;
@@ -42,6 +76,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'sort_order'   => $nextOrder,
             'v'            => $currentVersionId
         ]);
+        $newId = (int) $db->getPdo()->lastInsertId();
+
+        $badgeFilename = certificationBadgeUpload($newId);
+        if ($badgeFilename !== null) {
+            $db->query("UPDATE certifications SET badge_path = :badge_path WHERE id = :id", [
+                'badge_path' => $badgeFilename,
+                'id'         => $newId
+            ]);
+        }
     }
 
     header('Location: ' . cvVersionLink('/admin/certifications.php', $currentVersionId));
@@ -143,7 +186,7 @@ if (isset($_GET['edit'])) {
     <h2><?= $editingCertification ? 'Modifier une certification' : 'Certifications' ?></h2>
     <br />
 
-    <form action="<?= cvVersionLink('/admin/certifications.php', $currentVersionId) ?>" method="post">
+    <form action="<?= cvVersionLink('/admin/certifications.php', $currentVersionId) ?>" method="post" enctype="multipart/form-data">
         <?php if ($editingCertification): ?>
             <input type="hidden" name="id" value="<?= $editingCertification['id'] ?>" />
         <?php endif; ?>
@@ -166,6 +209,19 @@ if (isset($_GET['edit'])) {
                     <label for="year">Année</label>
                     <input type="number" value="<?= htmlspecialchars($editingCertification['year'] ?? '') ?>" name="year" id="year" class="form-control" placeholder="ex: 2022" min="1900" max="2100" />
                 </div>
+
+                <div class="mb-3">
+                    <label for="badge_image">Badge (image, facultatif)</label>
+                    <?php if (!empty($editingCertification['badge_path'])): ?>
+                        <div class="mb-2">
+                            <img src="/images/badges/<?= htmlspecialchars($editingCertification['badge_path']) ?>" alt="Badge" style="height: 60px; display: block; margin-bottom: 6px;" />
+                            <label class="text-muted" style="font-weight: normal;">
+                                <input type="checkbox" name="remove_badge" value="1" /> Supprimer le badge actuel
+                            </label>
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="badge_image" id="badge_image" class="form-control" accept="image/*" />
+                </div>
             </div>
         </div>
 
@@ -186,7 +242,11 @@ if (isset($_GET['edit'])) {
             <?php foreach ($certifications as $index => $certification): ?>
                 <div class="certification-card">
                     <div class="row align-items-start">
-                        <div class="col-12 col-md-9">
+                        <div class="col-12 col-md-9" style="display: flex; gap: 14px; align-items: flex-start;">
+                            <?php if (!empty($certification['badge_path'])): ?>
+                                <img src="/images/badges/<?= htmlspecialchars($certification['badge_path']) ?>" alt="Badge" style="height: 48px; width: 48px; object-fit: contain; flex-shrink: 0;" />
+                            <?php endif; ?>
+                            <div>
                             <div class="certification-title"><strong><?= htmlspecialchars($certification['title']) ?></strong></div>
                             <?php if ($certification['exam_version']): ?>
                                 <div class="certification-exam">Exam Version: <?= htmlspecialchars($certification['exam_version']) ?></div>
@@ -194,6 +254,7 @@ if (isset($_GET['edit'])) {
                             <?php if ($certification['year']): ?>
                                 <span class="certification-year"><?= htmlspecialchars($certification['year']) ?></span>
                             <?php endif; ?>
+                            </div>
                         </div>
                         <div class="col-12 col-md-3 certification-actions mt-3 mt-md-0">
                             <a href="<?= cvVersionLink('/admin/certifications.php?move=' . $certification['id'] . '&direction=up', $currentVersionId) ?>" class="btn btn-secondary <?= $index === 0 ? 'disabled' : '' ?>">&uarr;</a>

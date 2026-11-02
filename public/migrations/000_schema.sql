@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS information
     job_title VARCHAR(255),
     birthdate VARCHAR(20),
     linkedin_url VARCHAR(255),
+    github_url VARCHAR(255),
+    summary TEXT,
     cv_version_id INTEGER
 );
 
@@ -81,6 +83,7 @@ CREATE TABLE IF NOT EXISTS experiences
     displayed   INT default 1,
     tech_stack TEXT,
     page_break_before INT default 0,
+    category VARCHAR(20) NOT NULL DEFAULT 'pro',
     cv_version_id INTEGER
 );
 
@@ -94,7 +97,8 @@ CREATE TABLE IF NOT EXISTS certifications
     year          VARCHAR(10),
     sort_order    INT default 0,
     displayed     INT default 1,
-    cv_version_id INTEGER
+    cv_version_id INTEGER,
+    badge_path    VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS skills

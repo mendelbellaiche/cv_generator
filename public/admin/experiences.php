@@ -17,6 +17,12 @@ if ($currentVersionId === null) {
     exit;
 }
 
+$category = ($_GET['category'] ?? '') === 'freelance' ? 'freelance' : 'pro';
+$pageUrl = function (string $query = '') use (&$category, $currentVersionId): string {
+    return cvVersionLink('/admin/experiences.php?category=' . $category . ($query !== '' ? '&' . $query : ''), $currentVersionId);
+};
+$categoryLabels = ['pro' => 'Expériences professionnelles', 'freelance' => 'Freelance & projets personnels'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = $_POST['id'] ?? '';
     $company = $_POST['company'] ?? '';
@@ -30,9 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $techStack = implode(', ', $techStack);
 
     $pageBreakBefore = isset($_POST['page_break_before']) ? 1 : 0;
+    $category = ($_POST['category'] ?? '') === 'freelance' ? 'freelance' : 'pro';
 
     if ($id !== '') {
-        $db->query("UPDATE experiences SET company = :company, position = :position, city = :city, start_date = :start_date, end_date = :end_date, description = :description, tech_stack = :tech_stack, page_break_before = :page_break_before WHERE id = :id AND cv_version_id = :v", [
+        $db->query("UPDATE experiences SET company = :company, position = :position, city = :city, start_date = :start_date, end_date = :end_date, description = :description, tech_stack = :tech_stack, page_break_before = :page_break_before, category = :category WHERE id = :id AND cv_version_id = :v", [
             'company'            => $company,
             'position'           => $position,
             'city'               => $city,
@@ -41,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'description'        => $description,
             'tech_stack'         => $techStack,
             'page_break_before'  => $pageBreakBefore,
+            'category'           => $category,
             'id'                 => $id,
             'v'                  => $currentVersionId
         ]);
@@ -48,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $maxOrder = $db->query("SELECT MAX(sort_order) AS max_order FROM experiences WHERE cv_version_id = :v", ['v' => $currentVersionId])->fetch();
         $nextOrder = ($maxOrder['max_order'] ?? 0) + 1;
 
-        $db->query("INSERT INTO experiences (company, position, city, start_date, end_date, description, tech_stack, page_break_before, sort_order, cv_version_id) VALUES (:company, :position, :city, :start_date, :end_date, :description, :tech_stack, :page_break_before, :sort_order, :v)", [
+        $db->query("INSERT INTO experiences (company, position, city, start_date, end_date, description, tech_stack, page_break_before, category, sort_order, cv_version_id) VALUES (:company, :position, :city, :start_date, :end_date, :description, :tech_stack, :page_break_before, :category, :sort_order, :v)", [
             'company'            => $company,
             'position'           => $position,
             'city'               => $city,
@@ -57,24 +65,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'description'        => $description,
             'tech_stack'         => $techStack,
             'page_break_before'  => $pageBreakBefore,
+            'category'           => $category,
             'sort_order'         => $nextOrder,
             'v'                  => $currentVersionId
         ]);
     }
 
-    header('Location: ' . cvVersionLink('/admin/experiences.php', $currentVersionId));
+    header('Location: ' . $pageUrl());
     exit;
 }
 
 if (isset($_GET['delete'])) {
     $db->query("DELETE FROM experiences WHERE id = :id AND cv_version_id = :v", ['id' => $_GET['delete'], 'v' => $currentVersionId]);
-    header('Location: ' . cvVersionLink('/admin/experiences.php', $currentVersionId));
+    header('Location: ' . $pageUrl());
     exit;
 }
 
 if (isset($_GET['toggle_page_break'])) {
     $db->query("UPDATE experiences SET page_break_before = 1 - page_break_before WHERE id = :id AND cv_version_id = :v", ['id' => $_GET['toggle_page_break'], 'v' => $currentVersionId]);
-    header('Location: ' . cvVersionLink('/admin/experiences.php', $currentVersionId));
+    header('Location: ' . $pageUrl());
+    exit;
+}
+
+if (isset($_GET['switch_category'])) {
+    $target = $category === 'freelance' ? 'pro' : 'freelance';
+    $maxOrder = $db->query("SELECT MAX(sort_order) AS max_order FROM experiences WHERE cv_version_id = :v", ['v' => $currentVersionId])->fetch();
+
+    $db->query("UPDATE experiences SET category = :c, sort_order = :order WHERE id = :id AND cv_version_id = :v", [
+        'c'     => $target,
+        'order' => ($maxOrder['max_order'] ?? 0) + 1,
+        'id'    => $_GET['switch_category'],
+        'v'     => $currentVersionId
+    ]);
+
+    header('Location: ' . $pageUrl());
     exit;
 }
 
@@ -83,8 +107,8 @@ if (isset($_GET['move'], $_GET['direction'])) {
 
     if ($current) {
         $neighbor = $_GET['direction'] === 'up'
-            ? $db->query("SELECT * FROM experiences WHERE cv_version_id = :v AND sort_order < :order ORDER BY sort_order DESC LIMIT 1", ['v' => $currentVersionId, 'order' => $current['sort_order']])->fetch()
-            : $db->query("SELECT * FROM experiences WHERE cv_version_id = :v AND sort_order > :order ORDER BY sort_order ASC LIMIT 1", ['v' => $currentVersionId, 'order' => $current['sort_order']])->fetch();
+            ? $db->query("SELECT * FROM experiences WHERE cv_version_id = :v AND category = :c AND sort_order < :order ORDER BY sort_order DESC LIMIT 1", ['c' => $current['category'], 'v' => $currentVersionId, 'order' => $current['sort_order']])->fetch()
+            : $db->query("SELECT * FROM experiences WHERE cv_version_id = :v AND category = :c AND sort_order > :order ORDER BY sort_order ASC LIMIT 1", ['c' => $current['category'], 'v' => $currentVersionId, 'order' => $current['sort_order']])->fetch();
 
         if ($neighbor) {
             $db->query("UPDATE experiences SET sort_order = :order WHERE id = :id", ['order' => $neighbor['sort_order'], 'id' => $current['id']]);
@@ -92,11 +116,11 @@ if (isset($_GET['move'], $_GET['direction'])) {
         }
     }
 
-    header('Location: ' . cvVersionLink('/admin/experiences.php', $currentVersionId));
+    header('Location: ' . $pageUrl());
     exit;
 }
 
-$experiences = $db->query("SELECT * FROM experiences WHERE cv_version_id = :v ORDER BY sort_order ASC", ['v' => $currentVersionId])->fetchAll();
+$experiences = $db->query("SELECT * FROM experiences WHERE cv_version_id = :v AND category = :c ORDER BY sort_order ASC", ['v' => $currentVersionId, 'c' => $category])->fetchAll();
 
 $editingExperience = null;
 
@@ -207,16 +231,26 @@ function formatMonthYear(?string $value): string
 
 <main>
 
-    <h2><?= $editingExperience ? 'Modifier une expérience' : 'Expériences' ?></h2>
+    <h2><?= $editingExperience ? 'Modifier une expérience' : htmlspecialchars($categoryLabels[$category]) ?></h2>
     <br />
 
-    <form action="<?= cvVersionLink('/admin/experiences.php', $currentVersionId) ?>" method="post">
+    <form action="<?= $pageUrl() ?>" method="post">
         <?php if ($editingExperience): ?>
             <input type="hidden" name="id" value="<?= $editingExperience['id'] ?>" />
         <?php endif; ?>
 
         <div class="row">
             <div class="col-12 col-md-6">
+                <div class="mb-3">
+                    <label for="category">Section du CV</label>
+                    <select name="category" id="category" class="form-select">
+                        <?php $selectedCategory = $editingExperience['category'] ?? $category; ?>
+                        <?php foreach ($categoryLabels as $value => $label): ?>
+                            <option value="<?= $value ?>" <?= $selectedCategory === $value ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
                 <div class="mb-3">
                     <label for="position">Poste</label>
                     <input type="text" value="<?= htmlspecialchars($editingExperience['position'] ?? '') ?>" name="position" id="position" class="form-control" required />
@@ -265,7 +299,7 @@ function formatMonthYear(?string $value): string
         <div>
             <input type="submit" value="<?= $editingExperience ? 'Enregistrer' : 'Ajouter' ?>" class="btn btn-primary" />
             <?php if ($editingExperience): ?>
-                <a href="<?= cvVersionLink('/admin/experiences.php', $currentVersionId) ?>" class="btn btn-secondary">Annuler</a>
+                <a href="<?= $pageUrl() ?>" class="btn btn-secondary">Annuler</a>
             <?php endif; ?>
         </div>
     </form>
@@ -303,11 +337,12 @@ function formatMonthYear(?string $value): string
                             <?php endif; ?>
                         </div>
                         <div class="col-12 col-md-3 experience-actions mt-3 mt-md-0">
-                            <a href="<?= cvVersionLink('/admin/experiences.php?move=' . $experience['id'] . '&direction=up', $currentVersionId) ?>" class="btn btn-secondary <?= $index === 0 ? 'disabled' : '' ?>">&uarr;</a>
-                            <a href="<?= cvVersionLink('/admin/experiences.php?move=' . $experience['id'] . '&direction=down', $currentVersionId) ?>" class="btn btn-secondary <?= $index === count($experiences) - 1 ? 'disabled' : '' ?>">&darr;</a>
-                            <a href="<?= cvVersionLink('/admin/experiences.php?toggle_page_break=' . $experience['id'], $currentVersionId) ?>" class="btn btn-secondary" title="Basculer le saut de page avant cette expérience">&#8676;|</a>
-                            <a href="<?= cvVersionLink('/admin/experiences.php?edit=' . $experience['id'], $currentVersionId) ?>" class="btn btn-primary">Modifier</a>
-                            <a href="<?= cvVersionLink('/admin/experiences.php?delete=' . $experience['id'], $currentVersionId) ?>" class="btn btn-danger" onclick="return confirm('Supprimer cette expérience ?');">Supprimer</a>
+                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=up') ?>" class="btn btn-secondary <?= $index === 0 ? 'disabled' : '' ?>">&uarr;</a>
+                            <a href="<?= $pageUrl('move=' . $experience['id'] . '&direction=down') ?>" class="btn btn-secondary <?= $index === count($experiences) - 1 ? 'disabled' : '' ?>">&darr;</a>
+                            <a href="<?= $pageUrl('toggle_page_break=' . $experience['id']) ?>" class="btn btn-secondary" title="Basculer le saut de page avant cette expérience">&#8676;|</a>
+                            <a href="<?= $pageUrl('switch_category=' . $experience['id']) ?>" class="btn btn-secondary" title="Changer de section"><?= $category === 'freelance' ? '&rarr; Expériences' : '&rarr; Freelance / projets' ?></a>
+                            <a href="<?= $pageUrl('edit=' . $experience['id']) ?>" class="btn btn-primary">Modifier</a>
+                            <a href="<?= $pageUrl('delete=' . $experience['id']) ?>" class="btn btn-danger" onclick="return confirm('Supprimer cette expérience ?');">Supprimer</a>
                         </div>
                     </div>
                 </div>
