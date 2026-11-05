@@ -58,13 +58,22 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=<hash>
 ```
 
-Générer le hash du mot de passe choisi :
+Le plus simple est d'utiliser le script fourni, qui demande l'identifiant et le mot de passe (saisie masquée + confirmation) et écrit les deux variables dans le `.env` à la racine du repo (les autres variables éventuelles sont conservées) :
+
+```
+cd /var/www/cv_generator
+php bin/admin-credentials.php
+```
+
+Le même script sert à changer l'identifiant ou le mot de passe plus tard. Si le script est lancé en root, vérifier ensuite que l'utilisateur du serveur web (ex. `www-data`) peut lire le `.env`.
+
+Le script écrit dans `<racine du repo>/.env`, ce qui correspond au chemin lu par `auth.php` quand `public/` est un symlink. Si `public/` a été copié ailleurs, déplacer le fichier au bon endroit.
+
+Alternative manuelle : générer le hash du mot de passe choisi et le copier dans `ADMIN_PASSWORD_HASH` :
 
 ```
 php -r "echo password_hash('ton_mdp', PASSWORD_DEFAULT);"
 ```
-
-Copier la sortie dans `ADMIN_PASSWORD_HASH`.
 
 ## 4. Base de données SQLite
 

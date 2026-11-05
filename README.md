@@ -8,13 +8,17 @@ $ composer require pompdf/pompdf
 $ composer require twig/twig
 ```
 
-pour modifier le mot de passe dans **admin/.env** :
+## Identifiants admin
+
+Pour définir ou modifier l'identifiant et le mot de passe de l'admin :
 
 ```
-php -r "echo password_hash('ton_mdp', PASSWORD_DEFAULT);"
+php bin/admin-credentials.php
 ```
 
-et stocker le mot de passe affiché.
+Le script demande l'identifiant puis le mot de passe (saisie masquée, 8 caractères minimum, confirmation) et écrit `ADMIN_USERNAME` et `ADMIN_PASSWORD_HASH` dans le `.env` à la racine du projet (lu par `public/admin/auth.php`). Les autres variables du `.env` sont conservées.
+
+Voir [DEPLOY.md](DEPLOY.md#3-configurer-ladmin) pour la configuration sur le serveur.
 
 ## Dépendences
 
